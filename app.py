@@ -88,9 +88,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
                 img_path = f"temp_{datetime.now().timestamp()}.jpg"
                 img.save(img_path)
                 
-                # 가로 모드(A4)의 최대 너비는 약 297mm - (좌우 여백) = 약 246mm 입니다.
-                # 240mm로 이미지 너비를 설정하여 여유 공간 확보 (원래 180mm였으나 가로 폭에 맞게 조정)
-                pdf.image(img_path, h=150)
+                pdf.image(img_path, h=153)
                 
                 try:
                     os.remove(img_path)
@@ -121,7 +119,7 @@ example = get_example_excel()
 st.download_button("📥 예시 엑셀파일 다운로드", example, file_name="예시_오답노트_양식.xlsx")
 
 st.header("📄 문서 제목 입력")
-doc_title = st.text_input("문서 제목 (예: 25 S2 SAT MATH 만점반 Mock Test1)", value="25 S2 SAT MATH 만점반 Mock Test1")
+doc_title = st.text_input("문서 제목 (예: [11월대비01RW])", value="[11월대비01RW]")
 
 st.header("📦 오답노트 파일 업로드")
 st.caption("M1, M2 폴더 포함된 ZIP 파일 업로드")
