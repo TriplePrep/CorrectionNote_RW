@@ -90,7 +90,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
                 
                 # 가로 모드(A4)의 최대 너비는 약 297mm - (좌우 여백) = 약 246mm 입니다.
                 # 240mm로 이미지 너비를 설정하여 여유 공간 확보 (원래 180mm였으나 가로 폭에 맞게 조정)
-                pdf.image(img_path, w=240)
+                pdf.image(img_path, h=150)
                 
                 try:
                     os.remove(img_path)
