@@ -26,7 +26,7 @@ if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
             # 용지 방향이 가로로 바뀌었으므로 여백 값 조정이 필요할 수 있습니다.
             # A4 가로: 297mm x 210mm
             self.set_margins(25.4, 20, 25.4)  # 왼쪽, 위쪽, 오른쪽 (mm 단위)
-            self.set_auto_page_break(auto=True, margin=25.4) # 자동 페이지 나누기 여백
+            self.set_auto_page_break(auto=True, margin=20) # 자동 페이지 나누기 여백
             
             self.add_font(pdf_font_name, '', FONT_REGULAR, uni=True)
             self.add_font(pdf_font_name, 'B', FONT_BOLD, uni=True)
