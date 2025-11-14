@@ -227,7 +227,7 @@ with tab2:
     with col3:
         m2_start = st.number_input("M2 시작 페이지", min_value=1, value=34, key="m2_start")
     with col4:
-        m2_end = st.number_input("M2 종료 페이지", min_value=1, value=61, key="m2_end")
+        m2_end = st.number_input("M2 종료 페이지", min_value=1, value=60, key="m2_end")
 
     st.markdown("---")
 
