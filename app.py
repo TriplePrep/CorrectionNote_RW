@@ -199,3 +199,122 @@ if generated_files:
                 file_name=os.path.basename(selected_path), 
                 type="secondary"
             )
+
+
+# =========================================================
+# 탭 2: 캡쳐이미지 ZIP 생성기 
+# =========================================================
+with tab2:
+    st.header("📄 PDF 파일 업로드")
+    pdf_file = st.file_uploader("변환할 PDF 파일 업로드", type="pdf", key="pdf_uploader_tab2")
+    st.info("PDF 페이지를 고해상도 이미지(JPG)로 변환하여 ZIP 파일로 만듭니다.")
+
+    st.markdown("---")
+
+    # --- 페이지 범위 설정 ---
+    st.header("📖 페이지 범위 설정")
+    
+    st.subheader("Module 1 (M1) 설정")
+    col1, col2 = st.columns(2)
+    with col1:
+        m1_start = st.number_input("M1 시작 페이지", min_value=1, value=4, key="m1_start")
+    with col2:
+        m1_end = st.number_input("M1 종료 페이지", min_value=1, value=30, key="m1_end")
+
+    st.subheader("Module 2 (M2) 설정")
+    col3, col4 = st.columns(2)
+    with col3:
+        m2_start = st.number_input("M2 시작 페이지", min_value=1, value=34, key="m2_start")
+    with col4:
+        m2_end = st.number_input("M2 종료 페이지", min_value=1, value=61, key="m2_end")
+
+    st.markdown("---")
+
+    # 💡 [NEW] 품질 설정 슬라이더 추가
+    st.header("⚙️ 변환 품질 설정")
+    
+    
+    col5, col6 = st.columns(2)
+    with col5:
+        # 1. DPI 설정
+        dpi = st.slider("해상도 (DPI)", min_value=150, max_value=600, value=300, step=75)
+        st.caption("높을수록 선명하지만 변환 속도가 오래 걸리고 파일이 커집니다. (기본: 300)")
+    with col6:
+        # 2. JPG 압축 품질 설정
+        jpg_quality = st.slider("JPG 압축 품질", min_value=75, max_value=100, value=95, step=5)
+        st.caption("높을수록 원본에 가깝지만 파일이 커집니다. (기본: 95)")
+
+    st.markdown("---")
+
+    capture_button = st.button("🖼️ 캡쳐이미지 ZIP 생성", type="primary")
+
+    if capture_button and pdf_file:
+        
+        # 💡 [MODIFIED] 헬퍼 함수가 dpi_setting과 quality_setting을 받도록 수정
+        def process_pages_to_zip(doc, start_page, end_page, zip_handle, folder_name, dpi_setting, quality_setting):
+            """PDF 페이지를 순회하며 ZIP에 이미지로 저장하는 헬퍼 함수"""
+            start_idx = start_page - 1
+            end_idx = end_page
+            img_counter = 1
+            
+            if start_idx >= len(doc):
+                st.warning(f"'{folder_name}' 시작 페이지({start_page})가 PDF 전체 페이지({len(doc)})보다 큽니다. 이 모듈은 건너뜁니다.")
+                return 0
+            if end_idx > len(doc):
+                st.warning(f"'{folder_name}' 종료 페이지({end_page})가 PDF 전체 페이지({len(doc)})보다 큽니다. 마지막 페이지만큼 처리합니다.")
+                end_idx = len(doc)
+            if start_idx >= end_idx:
+                st.warning(f"'{folder_name}' 시작 페이지가 종료 페이지보다 크거나 같습니다. 이 모듈은 건너뜁니다.")
+                return 0
+
+            for i in range(start_idx, end_idx):
+                page = doc.load_page(i)
+                
+                # 💡 [MODIFIED] 사용자가 선택한 DPI 값을 사용
+                pix = page.get_pixmap(dpi=dpi_setting) 
+                
+                img_data = pix.tobytes("ppm")
+                img = Image.frombytes("RGB", [pix.width, pix.height], img_data)
+                
+                img_buffer = io.BytesIO()
+                # 💡 [MODIFIED] 사용자가 선택한 JPG 품질 값을 사용
+                img.save(img_buffer, format="JPEG", quality=quality_setting)
+                img_buffer.seek(0)
+                
+                file_name = f"{folder_name}/{img_counter}.jpg"
+                zip_handle.writestr(file_name, img_buffer.read())
+                
+                img_counter += 1
+                
+            return img_counter - 1
+
+
+        try:
+            with st.spinner(f"PDF 페이지를 이미지로 변환 중... (DPI: {dpi}, 품질: {jpg_quality})"):
+                pdf_bytes = pdf_file.getvalue()
+                doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+                
+                zip_buffer_capture = io.BytesIO()
+                
+                with zipfile.ZipFile(zip_buffer_capture, "w", zipfile.ZIP_DEFLATED) as zf:
+                    # 💡 [MODIFIED] 함수 호출 시 dpi, jpg_quality 값을 전달
+                    m1_count = process_pages_to_zip(doc, m1_start, m1_end, zf, "M1", dpi, jpg_quality)
+                    m2_count = process_pages_to_zip(doc, m2_start, m2_end, zf, "M2", dpi, jpg_quality)
+                
+                doc.close()
+                zip_buffer_capture.seek(0)
+
+            st.success(f"✅ ZIP 생성 완료! (M1: {m1_count}장, M2: {m2_count}장)")
+            
+            original_name = os.path.splitext(pdf_file.name)[0]
+            zip_name = f"{original_name}_캡쳐.zip"
+            
+            st.download_button(
+                "📁 캡쳐 ZIP 파일 다운로드",
+                zip_buffer_capture,
+                file_name=zip_name,
+                mime="application/zip"
+            )
+
+        except Exception as e:
+            st.error(f"오류 발생: {e}")
