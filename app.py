@@ -208,7 +208,7 @@ with tab1:
 with tab2:
     st.header("📄 PDF 파일 업로드")
     pdf_file = st.file_uploader("변환할 PDF 파일 업로드", type="pdf", key="pdf_uploader_tab2")
-    st.info("PDF파일을 페이지별로 JPG이미지 파일로 변환하고,  \n1페이지 당 1문제 기준으로 분리하여, 문제번호를 순서대로 부여하여  \n오답노트 생성기에 **연동가능한** 양식의 ZIP파일로 정리해줍니다")
+    st.info("PDF파일을 페이지별로 JPG이미지 파일로 변환합니다  \n  \n1페이지 당 1문제 기준으로 분리하여, 문제번호를 순서대로 부여하여  \n오답노트 생성기에 **연동가능한** 양식의 ZIP파일로 정리해줍니다")
 
     st.markdown("---")
 
