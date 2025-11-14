@@ -6,6 +6,7 @@ import io
 from PIL import Image
 from fpdf import FPDF
 from datetime import datetime
+import fitz  # PyMuPDF 라이브러리 (PDF->이미지 변환용)
 
 # ==============================
 # 공통 설정
@@ -16,14 +17,12 @@ FONT_REGULAR = "fonts/NanumGothic.ttf"
 FONT_BOLD = "fonts/NanumGothicBold.ttf"
 pdf_font_name = "NanumGothic"
 
+# --- 오답노트 생성기용 (Tab 1) ---
 if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
     class KoreanPDF(FPDF):
         def __init__(self):
             # 'L'을 추가하여 PDF 방향을 가로 모드 (Landscape)로 설정
-            # 기본값은 'P' (Portrait, 세로 모드)
             super().__init__(orientation='L') 
-            
-            # 용지 방향이 가로로 바뀌었으므로 여백 값 조정이 필요할 수 있습니다.
             # A4 가로: 297mm x 210mm
             self.set_margins(25.4, 20, 25.4)  # 왼쪽, 위쪽, 오른쪽 (mm 단위)
             self.set_auto_page_break(auto=True, margin=20) # 자동 페이지 나누기 여백
@@ -32,10 +31,11 @@ if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
             self.add_font(pdf_font_name, 'B', FONT_BOLD, uni=True)
             self.set_font(pdf_font_name, size=10)
 else:
-    st.error("⚠️ 한글 PDF 생성을 위해 fonts 폴더에 NanumGothic.ttf 와 NanumGothicBold.ttf 모두 필요합니다.")
+    # 폰트가 없어도 앱 실행은 가능하도록 st.error를 tab1 안으로 이동
+    pass
 
 # ==============================
-# 유틸리티 함수 (변경 없음)
+# 유틸리티 함수 (Tab 1 용)
 # ==============================
 
 # 예시 엑셀 다운로드용 버퍼 생성
@@ -88,7 +88,8 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
                 img_path = f"temp_{datetime.now().timestamp()}.jpg"
                 img.save(img_path)
                 
-                pdf.image(img_path, h=153)
+                # 사용자가 제공한 코드 (높이 153mm 하드코딩)
+                pdf.image(img_path, h=153) 
                 
                 try:
                     os.remove(img_path)
@@ -107,102 +108,102 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
     return pdf_path
 
 # ==============================
-# Streamlit UI (변경 없음)
+# Streamlit UI
 # ==============================
-st.set_page_config(page_title="SAT 오답노트 생성기", layout="centered")
-st.title("📝 SAT 오답노트 생성기 (PDF 가로 모드)")
+st.set_page_config(page_title="SAT 오답노트 & 캡쳐 생성기", layout="centered")
+st.title("SAT 오답노트 & 캡쳐 생성기")
 
-st.header("📊 예시 엑셀 양식")
-with st.expander("예시 엑셀파일 열기"):
-    st.dataframe(pd.read_excel(get_example_excel()))
-example = get_example_excel()
-st.download_button("📥 예시 엑셀파일 다운로드", example, file_name="예시_오답노트_양식.xlsx")
-
-st.header("📄 문서 제목 입력")
-doc_title = st.text_input("문서 제목 (예: [11월대비01RW])", value="[11월대비01RW]")
-
-st.header("📦 오답노트 파일 업로드")
-st.caption("M1, M2 폴더 포함된 ZIP 파일 업로드")
-img_zip = st.file_uploader("", type="zip", key="zip_uploader")
-
-st.caption("오답노트 엑셀 파일 업로드 (.xlsx)")
-excel_file = st.file_uploader("", type="xlsx", key="excel_uploader")
-
-generated_files = []
-generate = st.button("📎 오답노트 생성")
-
-if generate and img_zip and excel_file:
-    with st.spinner("오답노트 생성 중..."):
-        try:
-            m1_imgs, m2_imgs = extract_zip_to_dict(img_zip)
-            
-            # pandas read_excel에서 파일명/버퍼 전달 시 openpyxl 필요
-            df = pd.read_excel(excel_file)
-            
-            output_dir = "generated_pdfs"
-            os.makedirs(output_dir, exist_ok=True)
-
-            for _, row in df.iterrows():
-                # '이름', 'Module1', 'Module2' 컬럼이 존재한다고 가정
-                if '이름' not in row or 'Module1' not in row or 'Module2' not in row:
-                    continue
-                    
-                name = row['이름']
-
-                # Module1 또는 Module2 중 하나라도 비어 있으면 건너뜀
-                if pd.isna(row['Module1']) or pd.isna(row['Module2']):
-                    continue
-
-                # 오답 번호 파싱 (공백 제거 및 문자열로 변환)
-                m1_nums = [num.strip() for num in str(row['Module1']).split(',') if num.strip()] if pd.notna(row['Module1']) else []
-                m2_nums = [num.strip() for num in str(row['Module2']).split(',') if num.strip()] if pd.notna(row['Module2']) else []
-                
-                # 이미지 리스트 생성
-                m1_list = [m1_imgs[num] for num in m1_nums if num in m1_imgs]
-                m2_list = [m2_imgs[num] for num in m2_nums if num in m2_imgs]
-                
-                # 실제로 포함할 이미지가 있는 경우에만 PDF 생성
-                if m1_list or m2_list:
-                    pdf_path = create_student_pdf(name, m1_list, m2_list, doc_title, output_dir)
-                    generated_files.append((name, pdf_path))
-
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, "w") as zipf:
-                for name, path in generated_files:
-                    zipf.write(path, os.path.basename(path))
-            zip_buffer.seek(0)
-
-            st.success(f"✅ 총 {len(generated_files)}개의 오답노트 PDF 생성 완료! (가로 모드)")
-            st.download_button("📁 ZIP 파일 다운로드", zip_buffer, file_name=f"{doc_title}_오답노트_모음.zip", type="primary")
-
-        except Exception as e:
-            st.error(f"오류 발생: {e}")
-
-if generated_files:
-    st.markdown("---")
-    st.header("👁️ 개별 PDF 다운로드")
-    
-    # 생성된 파일 목록에서 이름만 추출하여 정렬
-    sorted_names = sorted([name for name, _ in generated_files])
-    
-    selected = st.selectbox("학생 선택", sorted_names, index=0)
-    
-    if selected:
-        generated_dict = {name: path for name, path in generated_files}
-        selected_path = generated_dict[selected]
-        
-        # 다운로드 버튼
-        with open(selected_path, "rb") as f:
-            st.download_button(
-                f"📄 {selected} PDF 다운로드", 
-                f, 
-                file_name=os.path.basename(selected_path), 
-                type="secondary"
-            )
-
+tab1, tab2 = st.tabs(["📝 오답노트 생성기", "🖼️ 캡쳐이미지 ZIP 생성기"])
 
 # =========================================================
-# 탭 2: 캡쳐이미지 ZIP 생성기 
+# 탭 1: 오답노트 생성기 (기존 코드)
+# =========================================================
+with tab1:
+    if not (os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD)):
+         st.error("⚠️ 한글 PDF 생성을 위해 fonts 폴더에 NanumGothic.ttf 와 NanumGothicBold.ttf 모두 필요합니다.")
+         
+    st.header("📊 예시 엑셀 양식")
+    with st.expander("예시 엑셀파일 열기"):
+        st.dataframe(pd.read_excel(get_example_excel()))
+    example = get_example_excel()
+    st.download_button("📥 예시 엑셀파일 다운로드", example, file_name="예시_오답노트_양식.xlsx")
+
+    st.header("📄 문서 제목 입력")
+    doc_title = st.text_input("문서 제목 (예: [11월대비01RW])", value="[11월대비01RW]")
+
+    st.header("📦 오답노트 파일 업로드")
+    st.caption("M1, M2 폴더 포함된 ZIP 파일 업로드")
+    img_zip = st.file_uploader("ZIP 파일", type="zip", key="zip_uploader_tab1")
+
+    st.caption("오답노트 엑셀 파일 업로드 (.xlsx)")
+    excel_file = st.file_uploader("XLSX 파일", type="xlsx", key="excel_uploader_tab1")
+
+    generated_files = []
+    generate = st.button("📎 오답노트 생성")
+
+    if generate and img_zip and excel_file:
+        with st.spinner("오답노트 생성 중..."):
+            try:
+                m1_imgs, m2_imgs = extract_zip_to_dict(img_zip)
+                
+                df = pd.read_excel(excel_file)
+                
+                output_dir = "generated_pdfs"
+                os.makedirs(output_dir, exist_ok=True)
+
+                for _, row in df.iterrows():
+                    if '이름' not in row or 'Module1' not in row or 'Module2' not in row:
+                        continue
+                        
+                    name = row['이름']
+
+                    if pd.isna(row['Module1']) or pd.isna(row['Module2']):
+                        continue
+
+                    m1_nums = [num.strip() for num in str(row['Module1']).split(',') if num.strip()] if pd.notna(row['Module1']) else []
+                    m2_nums = [num.strip() for num in str(row['Module2']).split(',') if num.strip()] if pd.notna(row['Module2']) else []
+                    
+                    m1_list = [m1_imgs[num] for num in m1_nums if num in m1_imgs]
+                    m2_list = [m2_imgs[num] for num in m2_nums if num in m2_imgs]
+                    
+                    if m1_list or m2_list:
+                        pdf_path = create_student_pdf(name, m1_list, m2_list, doc_title, output_dir)
+                        generated_files.append((name, pdf_path))
+
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w") as zipf:
+                    for name, path in generated_files:
+                        zipf.write(path, os.path.basename(path))
+                zip_buffer.seek(0)
+
+                st.success(f"✅ 총 {len(generated_files)}개의 오답노트 PDF 생성 완료! (가로 모드)")
+                st.download_button("📁 ZIP 파일 다운로드", zip_buffer, file_name=f"{doc_title}_오답노트_모음.zip", type="primary")
+
+            except Exception as e:
+                st.error(f"오류 발생: {e}")
+
+    if generated_files:
+        st.markdown("---")
+        st.header("👁️ 개별 PDF 다운로드")
+        
+        sorted_names = sorted([name for name, _ in generated_files])
+        
+        selected = st.selectbox("학생 선택", sorted_names, index=0)
+        
+        if selected:
+            generated_dict = {name: path for name, path in generated_files}
+            selected_path = generated_dict[selected]
+            
+            with open(selected_path, "rb") as f:
+                st.download_button(
+                    f"📄 {selected} PDF 다운로드", 
+                    f, 
+                    file_name=os.path.basename(selected_path), 
+                    type="secondary"
+                )
+
+# =========================================================
+# 탭 2: 캡쳐이미지 ZIP 생성기 (새로운 기능)
 # =========================================================
 with tab2:
     st.header("📄 PDF 파일 업로드")
