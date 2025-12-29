@@ -18,8 +18,7 @@ FONT_BOLD = "fonts/NanumGothicBold.ttf"
 pdf_font_name = "NanumGothic"
 
 # --- 오답노트 생성기용 (Tab 1) ---
-# 전역 폰트 추가 플래그
-_fonts_initialized = False
+
 
 if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
     class KoreanPDF(FPDF):
@@ -35,7 +34,6 @@ if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
             if not _fonts_initialized:
                 self.add_font(pdf_font_name, '', FONT_REGULAR)
                 self.add_font(pdf_font_name, 'B', FONT_BOLD)
-                _fonts_initialized = True
             
             self.set_font(pdf_font_name, size=10)
 else:
