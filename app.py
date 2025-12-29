@@ -4,7 +4,7 @@ import zipfile
 import os
 import io
 from PIL import Image
-from fpdf import FPDF
+from fpdf import FPDF, XPos, YPos
 from datetime import datetime
 import fitz  # PyMuPDF 라이브러리 (PDF->이미지 변환용)
 import logging
