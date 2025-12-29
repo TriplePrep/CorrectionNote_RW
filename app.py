@@ -20,6 +20,9 @@ pdf_font_name = "NanumGothic"
 # --- 오답노트 생성기용 (Tab 1) ---
 if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
     class KoreanPDF(FPDF):
+        # 클래스 변수로 폰트 추가 여부 추적
+        _fonts_added = False
+        
         def __init__(self):
             # 'L'을 추가하여 PDF 방향을 가로 모드 (Landscape)로 설정
             super().__init__(orientation='L') 
@@ -27,8 +30,12 @@ if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
             self.set_margins(25.4, 20, 25.4)  # 왼쪽, 위쪽, 오른쪽 (mm 단위)
             self.set_auto_page_break(auto=True, margin=20) # 자동 페이지 나누기 여백
             
-            self.add_font(pdf_font_name, '', FONT_REGULAR, uni=True)
-            self.add_font(pdf_font_name, 'B', FONT_BOLD, uni=True)
+            # 폰트는 한 번만 추가
+            if not KoreanPDF._fonts_added:
+                self.add_font(pdf_font_name, '', FONT_REGULAR, uni=True)
+                self.add_font(pdf_font_name, 'B', FONT_BOLD, uni=True)
+                KoreanPDF._fonts_added = True
+            
             self.set_font(pdf_font_name, size=10)
 else:
     # 폰트가 없어도 앱 실행은 가능하도록 st.error를 tab1 안으로 이동
@@ -73,7 +80,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
     pdf = KoreanPDF()
     pdf.add_page()
     pdf.set_font(pdf_font_name, style='B', size=10)
-    pdf.cell(0, 8, txt=f"<{name}_{doc_title}>", ln=True)
+    pdf.cell(0, 8, text=f"<{name}_{doc_title}>", new_x='LMARGIN', new_y='NEXT')
 
     def add_images(title, images):
         img_est_height = 100
@@ -82,7 +89,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
             pdf.add_page()
 
         pdf.set_font(pdf_font_name, size=10)
-        pdf.cell(0, 8, txt=title, ln=True)
+        pdf.cell(0, 8, text=title, new_x='LMARGIN', new_y='NEXT')
         if images:
             for img in images:
                 img_path = f"temp_{datetime.now().timestamp()}.jpg"
@@ -97,7 +104,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
                     pass
                 pdf.ln(8)
         else:
-            pdf.cell(0, 8, txt="오답 없음", ln=True)
+            pdf.cell(0, 8, text="오답 없음", new_x='LMARGIN', new_y='NEXT')
             pdf.ln(8)
 
     add_images("<Module1>", m1_imgs)
@@ -144,6 +151,9 @@ with tab1:
     if generate and img_zip and excel_file:
         with st.spinner("오답노트 생성 중..."):
             try:
+                # 폰트 추가 플래그 초기화 (새로운 생성 작업 시작 시)
+                KoreanPDF._fonts_added = False
+                
                 m1_imgs, m2_imgs = extract_zip_to_dict(img_zip)
                 
                 df = pd.read_excel(excel_file)
@@ -164,7 +174,7 @@ with tab1:
                     m2_nums = [num.strip() for num in str(row['Module2']).split(',') if num.strip()] if pd.notna(row['Module2']) else []
                     
                     m1_list = [m1_imgs[num] for num in m1_nums if num in m1_imgs]
-                    m2_list = [m2_imgs[num] for num in m2_nums if num in m2_imgs]
+                    m2_list = [m2_imgs[num] for num in m2_nums if num in m2_nums]
                     
                     if m1_list or m2_list:
                         pdf_path = create_student_pdf(name, m1_list, m2_list, doc_title, output_dir)
