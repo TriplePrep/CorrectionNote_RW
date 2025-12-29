@@ -80,7 +80,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
     pdf = KoreanPDF()
     pdf.add_page()
     pdf.set_font(pdf_font_name, style='B', size=10)
-    pdf.cell(0, 8, text=f"<{name}_{doc_title}>", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 8, txt=f"<{name}_{doc_title}>", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     def add_images(title, images):
         img_est_height = 100
@@ -89,7 +89,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
             pdf.add_page()
 
         pdf.set_font(pdf_font_name, size=10)
-        pdf.cell(0, 8, text=title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 8, txt=title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         if images:
             for img in images:
                 img_path = f"temp_{datetime.now().timestamp()}.jpg"
@@ -104,7 +104,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
                     pass
                 pdf.ln(8)
         else:
-            pdf.cell(0, 8, text="오답 없음", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.cell(0, 8, txt="오답 없음", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.ln(8)
 
     add_images("<Module1>", m1_imgs)
