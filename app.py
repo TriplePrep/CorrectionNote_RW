@@ -57,9 +57,10 @@ def create_pdf_with_korean_font():
     pdf.set_margins(25.4, 20, 25.4)
     pdf.set_auto_page_break(auto=True, margin=20)
     
-    # 폰트 등록 (매 인스턴스마다)
-    pdf.add_font("nanum", "", FONT_REGULAR)
-    pdf.add_font("nanum", "B", FONT_BOLD)
+    # 폰트 등록 (subsetting=False로 TSI 경고 해결)
+    pdf.add_font("nanum", "", FONT_REGULAR, uni=True)
+    pdf.add_font("nanum", "B", FONT_BOLD, uni=True)
+    pdf.set_font_subsetting(False)  # 서브셋 비활성화
     
     return pdf
 
@@ -69,7 +70,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
     
     pdf.add_page()
     pdf.set_font("nanum", style='B', size=10)
-    pdf.cell(0, 8, txt=f"<{name}_{doc_title}>", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 8, text=f"<{name}_{doc_title}>", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     def add_images(title, images):
         img_est_height = 100
@@ -77,7 +78,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
             pdf.add_page()
 
         pdf.set_font("nanum", size=10)
-        pdf.cell(0, 8, txt=title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 8, text=title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         if images:
             for img in images:
                 img_path = os.path.join(output_dir, f"temp_{datetime.now().timestamp()}.jpg")
@@ -89,7 +90,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
                     pass
                 pdf.ln(8)
         else:
-            pdf.cell(0, 8, txt="오답 없음", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.cell(0, 8, text="오답 없음", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.ln(8)
 
     add_images("<Module1>", m1_imgs)
