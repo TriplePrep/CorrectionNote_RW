@@ -3,6 +3,6 @@ streamlit
 pandas
 xlsxwriter
 openpyxl
-fpdf2
+fpdf2==2.7.4
 Pillow
 PyMuPDF
