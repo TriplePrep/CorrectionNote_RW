@@ -220,20 +220,16 @@ with tab2:
     st.subheader("Module 1 (M1) 설정")
     col1, col2 = st.columns(2)
     with col1:
-        m1_start = st.number_input("M1 시작 페이지", min_value=1, value=4, key="m1_start")
-        m1_start = st.number_input("M1 시작 페이지", min_value=1, value=3, key="m1_start")
+        m1_start = st.number_input("M1 시작 페이지", min_value=1, value=3, key="tab2_m1_start")
     with col2:
-        m1_end = st.number_input("M1 종료 페이지", min_value=1, value=30, key="m1_end")
-        m1_end = st.number_input("M1 종료 페이지", min_value=1, value=29, key="m1_end")
+        m1_end = st.number_input("M1 종료 페이지", min_value=1, value=29, key="tab2_m1_end")
 
     st.subheader("Module 2 (M2) 설정")
     col3, col4 = st.columns(2)
     with col3:
-        m2_start = st.number_input("M2 시작 페이지", min_value=1, value=34, key="m2_start")
-        m2_start = st.number_input("M2 시작 페이지", min_value=1, value=33, key="m2_start")
+        m2_start = st.number_input("M2 시작 페이지", min_value=1, value=33, key="tab2_m2_start")
     with col4:
-        m2_end = st.number_input("M2 종료 페이지", min_value=1, value=60, key="m2_end")
-        m2_end = st.number_input("M2 종료 페이지", min_value=1, value=59, key="m2_end")
+        m2_end = st.number_input("M2 종료 페이지", min_value=1, value=59, key="tab2_m2_end")
 
     st.markdown("---")
 
