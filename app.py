@@ -18,23 +18,24 @@ FONT_BOLD = "fonts/NanumGothicBold.ttf"
 pdf_font_name = "NanumGothic"
 
 # --- 오답노트 생성기용 (Tab 1) ---
+# 전역 폰트 추가 플래그
+_fonts_initialized = False
+
 if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
     class KoreanPDF(FPDF):
-        # 클래스 변수로 폰트 추가 여부 추적
-        _fonts_added = False
-        
         def __init__(self):
+            global _fonts_initialized
             # 'L'을 추가하여 PDF 방향을 가로 모드 (Landscape)로 설정
             super().__init__(orientation='L') 
             # A4 가로: 297mm x 210mm
             self.set_margins(25.4, 20, 25.4)  # 왼쪽, 위쪽, 오른쪽 (mm 단위)
             self.set_auto_page_break(auto=True, margin=20) # 자동 페이지 나누기 여백
             
-            # 폰트는 한 번만 추가
-            if not KoreanPDF._fonts_added:
+            # 폰트는 전체 앱에서 한 번만 추가
+            if not _fonts_initialized:
                 self.add_font(pdf_font_name, '', FONT_REGULAR)
                 self.add_font(pdf_font_name, 'B', FONT_BOLD)
-                KoreanPDF._fonts_added = True
+                _fonts_initialized = True
             
             self.set_font(pdf_font_name, size=10)
 else:
@@ -151,9 +152,6 @@ with tab1:
     if generate and img_zip and excel_file:
         with st.spinner("오답노트 생성 중..."):
             try:
-                # 폰트 추가 플래그 초기화 (새로운 생성 작업 시작 시)
-                KoreanPDF._fonts_added = False
-                
                 m1_imgs, m2_imgs = extract_zip_to_dict(img_zip)
                 
                 df = pd.read_excel(excel_file)
