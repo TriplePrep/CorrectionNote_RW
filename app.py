@@ -4,7 +4,7 @@ import zipfile
 import os
 import io
 from PIL import Image
-from fpdf import FPDF
+from fpdf import FPDF, XPos, YPos
 from datetime import datetime
 import fitz  # PyMuPDF 라이브러리 (PDF->이미지 변환용)
 
@@ -32,8 +32,8 @@ if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
             
             # 폰트는 한 번만 추가
             if not KoreanPDF._fonts_added:
-                self.add_font(pdf_font_name, '', FONT_REGULAR, uni=True)
-                self.add_font(pdf_font_name, 'B', FONT_BOLD, uni=True)
+                self.add_font(pdf_font_name, '', FONT_REGULAR)
+                self.add_font(pdf_font_name, 'B', FONT_BOLD)
                 KoreanPDF._fonts_added = True
             
             self.set_font(pdf_font_name, size=10)
@@ -80,7 +80,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
     pdf = KoreanPDF()
     pdf.add_page()
     pdf.set_font(pdf_font_name, style='B', size=10)
-    pdf.cell(0, 8, text=f"<{name}_{doc_title}>", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 8, text=f"<{name}_{doc_title}>", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     def add_images(title, images):
         img_est_height = 100
@@ -89,7 +89,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
             pdf.add_page()
 
         pdf.set_font(pdf_font_name, size=10)
-        pdf.cell(0, 8, text=title, new_x='LMARGIN', new_y='NEXT')
+        pdf.cell(0, 8, text=title, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         if images:
             for img in images:
                 img_path = f"temp_{datetime.now().timestamp()}.jpg"
@@ -104,7 +104,7 @@ def create_student_pdf(name, m1_imgs, m2_imgs, doc_title, output_dir):
                     pass
                 pdf.ln(8)
         else:
-            pdf.cell(0, 8, text="오답 없음", new_x='LMARGIN', new_y='NEXT')
+            pdf.cell(0, 8, text="오답 없음", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.ln(8)
 
     add_images("<Module1>", m1_imgs)
