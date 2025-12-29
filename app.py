@@ -27,8 +27,8 @@ if os.path.exists(FONT_REGULAR) and os.path.exists(FONT_BOLD):
             self.set_margins(25.4, 20, 25.4)  # 왼쪽, 위쪽, 오른쪽 (mm 단위)
             self.set_auto_page_break(auto=True, margin=20) # 자동 페이지 나누기 여백
             
-            self.add_font(pdf_font_name, '', FONT_REGULAR, subset=False)
-            self.add_font(pdf_font_name, 'B', FONT_BOLD, subset=False)
+            self.add_font(pdf_font_name, '', FONT_REGULAR, uni=True)
+            self.add_font(pdf_font_name, 'B', FONT_BOLD, uni=True)
             self.set_font(pdf_font_name, size=10)
 else:
     # 폰트가 없어도 앱 실행은 가능하도록 st.error를 tab1 안으로 이동
